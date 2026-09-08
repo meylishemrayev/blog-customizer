@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 
 import { ArrowButton } from 'src/ui/arrow-button';
@@ -12,6 +12,7 @@ import {
 	ArticleStateType,
 	backgroundColors,
 	contentWidthArr,
+	defaultArticleState,
 	fontColors,
 	fontFamilyOptions,
 	fontSizeOptions,
@@ -21,55 +22,55 @@ import {
 import styles from './ArticleParamsForm.module.scss';
 
 type ArticleFormProps = {
-	defaultState: ArticleStateType;
+	articleState: ArticleStateType;
 	onApply: (state: ArticleStateType) => void;
 };
 
 export const ArticleParamsForm = ({
-	defaultState,
+	articleState,
 	onApply,
 }: ArticleFormProps) => {
-	const [isOpen, setIsOpen] = useState(false);
-	const [formState, setFormState] = useState<ArticleStateType>(defaultState);
+	const [isFormOpen, setIsFormOpen] = useState(false);
+	const [formState, setFormState] = useState<ArticleStateType>(articleState);
 	const formRef = useRef<HTMLFormElement>(null);
 	const asideRef = useRef<HTMLElement>(null);
 
 	useEffect(() => {
 		const handleCloseForm = (event: MouseEvent) => {
 			if (
-				isOpen &&
+				isFormOpen &&
 				asideRef.current &&
 				!asideRef.current.contains(event.target as Node)
 			) {
-				setIsOpen(false);
+				setIsFormOpen(false);
 			}
 		};
 
 		document.addEventListener('mousedown', handleCloseForm);
 		return () => document.removeEventListener('mousedown', handleCloseForm);
-	}, [isOpen]);
+	}, [isFormOpen]);
 
 	useEffect(() => {
 		const handleEscape = (event: KeyboardEvent) => {
-			if (isOpen && event.key === 'Escape') {
-				setIsOpen(false);
+			if (isFormOpen && event.key === 'Escape') {
+				setIsFormOpen(false);
 			}
 		};
 
 		document.addEventListener('keydown', handleEscape);
 		return () => document.removeEventListener('keydown', handleEscape);
-	}, [isOpen]);
+	}, [isFormOpen]);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		onApply(formState);
-		setIsOpen(false);
+		setIsFormOpen(false);
 	};
 
 	const handleReset = () => {
-		setFormState(defaultState);
-		onApply(defaultState);
-		setIsOpen(false);
+		setFormState(defaultArticleState);
+		onApply(defaultArticleState);
+		setIsFormOpen(false);
 	};
 
 	const handleChange = (key: keyof ArticleStateType, value: OptionType) => {
@@ -79,16 +80,22 @@ export const ArticleParamsForm = ({
 	return (
 		<>
 			<ArrowButton
-				isOpen={isOpen}
+				isOpen={isFormOpen}
 				onClick={() => {
-					setIsOpen((prev) => !prev);
+					setIsFormOpen((prev) => !prev);
 				}}
 			/>
 			<aside
 				ref={asideRef}
-				className={clsx(styles.container, { [styles.container_open]: isOpen })}>
-				<form ref={formRef} className={styles.form} onSubmit={handleSubmit}>
-					<Text size={31} weight={800} uppercase>
+				className={clsx(styles.container, {
+					[styles.container_open]: isFormOpen,
+				})}>
+				<form
+					ref={formRef}
+					className={styles.form}
+					onSubmit={handleSubmit}
+					onReset={handleReset}>
+					<Text as='h2' size={31} weight={800} uppercase>
 						ЗАДАЙТЕ ПАРАМЕТРЫ
 					</Text>
 					<Select
@@ -126,12 +133,7 @@ export const ArticleParamsForm = ({
 						onChange={(option) => handleChange('contentWidth', option)}
 					/>
 					<div className={styles.bottomContainer}>
-						<Button
-							title='Сбросить'
-							htmlType='reset'
-							type='clear'
-							onClick={handleReset}
-						/>
+						<Button title='Сбросить' htmlType='reset' type='clear' />
 						<Button title='Применить' htmlType='submit' type='apply' />
 					</div>
 				</form>
